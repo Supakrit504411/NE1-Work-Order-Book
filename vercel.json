@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/:dept", "destination": "/?action=getConfig&dept=:dept" }
+  ]
+}
