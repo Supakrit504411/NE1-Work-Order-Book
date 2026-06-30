@@ -743,7 +743,9 @@
     </div>
 
     <script>
-        // Global variables
+        // ============================================================
+        // 🔧 สำคัญมาก: คุณต้องเปลี่ยน URL ตรงนี้เป็น Google Apps Script Web App URL จริงของคุณเอง!
+        // ============================================================
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvOkZrjFi029dfLgU8Zfz-V0nRbjG0WOirYzYBtiUi2G81mdi82m03G_efQwdDx7hc/exec';
         
         // ============================================================
@@ -840,7 +842,6 @@
                         showConfirmButton: false
                     });
                 } else {
-                    // ★ แก้ไขให้ดึงข้อความแจ้งเตือน Error จริงจากระบบหลังบ้านมาแสดง
                     Swal.fire({
                         icon: 'error',
                         title: 'เข้าสู่ระบบไม่สำเร็จ',
@@ -849,10 +850,11 @@
                 }
             } catch (error) {
                 console.error('Login error:', error);
+                // ★ ปรับปรุงให้ดึงข้อความ Error จริงออกมาแสดงเพื่อให้คุณวิเคราะห์ได้ทันที
                 Swal.fire({
                     icon: 'error',
-                    title: 'เกิดข้อผิดพลาด',
-                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์หลังบ้านได้'
+                    title: 'เกิดข้อผิดพลาดในการเชื่อมต่อ',
+                    text: `ไม่สามารถเชื่อมต่อกับหลังบ้านได้: (${error.message})\n\nคำแนะนำ:\n1. ตรวจสอบว่า SCRIPT_URL ในหน้า index.html มีการพิมพ์ตกหล่นหรือไม่\n2. ตรวจสอบว่า Google Apps Script ได้ทำการกด Deploy และตั้งค่าเป็น "Everyone" (ทุกคน) แล้วหรือยัง`
                 });
             }
             
@@ -2279,10 +2281,6 @@
             const modalImage = document.getElementById('modalImage');
             modalImage.src = imageUrl;
             modal.classList.remove('hidden');
-        }
-        
-        function closeImageModal() {
-            document.getElementById('imageModal').classList.add('hidden');
         }
         
         // Table expand functions
