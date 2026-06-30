@@ -1,0 +1,342 @@
+// Google Apps Script Code - Updated Version
+const SHEET_ID = '1Eu-RPvD2tm4iaefnHxdq9_Wg4MMu0FgKeIC7fEgEJ28';
+const FOLDER_ID = '1rOauPVMj2gm3PbTr5bWVuq65wRGa5c88';
+
+function doGet(e) {
+  const action = e.parameter.action;
+  
+  try {
+    switch (action) {
+      case 'read':
+        return ContentService.createTextOutput(JSON.stringify(readData()))
+          .setMimeType(ContentService.MimeType.JSON);
+      case 'getConfig':
+        return ContentService.createTextOutput(JSON.stringify(getConfig()))
+          .setMimeType(ContentService.MimeType.JSON);
+      default:
+        return ContentService.createTextOutput(JSON.stringify({success: false, error: 'Invalid action'}))
+          .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({success: false, error: error.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doPost(e) {
+  const action = e.parameter.action;
+    if (action === 'recordLogin') {
+  return ContentService.createTextOutput(JSON.stringify(recordLogin(data)));
+}
+  try {
+    switch (action) {
+      case 'login':
+        return ContentService.createTextOutput(JSON.stringify(handleLogin(e.parameter)))
+          .setMimeType(ContentService.MimeType.JSON);
+      case 'create':
+        return ContentService.createTextOutput(JSON.stringify(createRecord(e.parameter)))
+          .setMimeType(ContentService.MimeType.JSON);
+      case 'update':
+        return ContentService.createTextOutput(JSON.stringify(updateRecord(e.parameter)))
+          .setMimeType(ContentService.MimeType.JSON);
+      default:
+        return ContentService.createTextOutput(JSON.stringify({success: false, error: 'Invalid action'}))
+          .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({success: false, error: error.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+}
+
+function handleLogin(params) {
+  try {
+    const configSheet = getOrCreateSheet('Config');
+    const configData = configSheet.getDataRange().getValues();
+    
+    let validCredentials = false;
+    
+    for (let i = 1; i < configData.length; i++) {
+      if (configData[i][0] === 'username' && configData[i][1] === params.username &&
+          configData[i+1] && configData[i+1][0] === 'password' && configData[i+1][1] === params.password) {
+        validCredentials = true;
+        break;
+      }
+    }
+    
+    return {success: validCredentials};
+  } catch (error) {
+    return {success: false, error: error.toString()};
+  }
+}
+
+function getConfig() {
+  try {
+    const configSheet = getOrCreateSheet('Config');
+    const configData = configSheet.getDataRange().getValues();
+    
+    const config = {
+      appTitle: 'Work Book แผนกบริการและลูกค้าสัมพันธ์ กฟส.เมืองนครพนม',
+      bannerImage: '',
+      developerInfo: 'พัฒนาโดย นายศุภกฤษ ทะวัง ชผ.บส.กฟส.เมืองนครพนม',
+      districts: ['เมืองนครพนม', 'โพนสวรรค์', 'ธาตุพนม', 'ท่าอุเทน', 'นาแก', 'ศรีสงคราม', 'นาหว้า', 'บ้านแพง', 'ปลาปาก', 'วังยาง', 'นาทม'],
+      responsiblePersons: ['นพพร วิเศษแก้ว', 'ศุภกฤษ ทะวัง', 'สนธยา คำจันทร์', 'รพีภัทร ชัยสุนทร', 'อาทิตย์ สมบัติ', 'สรายุทธ สุขแซว'],
+      budgetTypes: ['C', 'P', 'I', 'C01.1', 'C02.1', 'C02.2', 'C03.1', 'CหลายDot'],
+      statusOptions: ['รอดำเนินการ', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก']
+    };
+    
+    // Override with config from sheet if available
+    for (let i = 1; i < configData.length; i++) {
+      const key = configData[i][0];
+      const value = configData[i][1];
+      
+      if (key && value) {
+        if (key.includes('districts') || key.includes('responsiblePersons') || 
+            key.includes('budgetTypes') || key.includes('statusOptions')) {
+          // Handle array values
+          const arrayKey = key.split('_')[0];
+          if (!config[arrayKey]) config[arrayKey] = [];
+          config[arrayKey].push(value);
+        } else {
+          config[key] = value;
+        }
+      }
+    }
+    
+    return {success: true, data: config};
+  } catch (error) {
+    return {success: false, error: error.toString()};
+  }
+}
+
+function createRecord(params) {
+  try {
+    const sheet = getOrCreateSheet('Data');
+    
+    let fileUrl = '';
+    
+    // Handle file upload
+    if (params.fileData && params.fileName) {
+      fileUrl = uploadFile(params.fileData, params.fileName, params.fileType, params.responsible);
+    }
+    
+    const newRow = [
+      params.timestamp,
+      params.details,
+      params.requesterName,
+      params.district,
+      params.subdistrict,
+      params.village,
+      params.phone,
+      params.responsible,
+      params.budget,
+      params.budgetAmount,
+      params.status,
+      fileUrl,
+      params.wbs,
+      new Date().toLocaleString('th-TH', {timeZone: 'Asia/Bangkok'}), // update
+      new Date().toLocaleString('th-TH', {timeZone: 'Asia/Bangkok'})  // last edit
+    ];
+    
+    sheet.appendRow(newRow);
+    
+    return {success: true};
+  } catch (error) {
+    return {success: false, error: error.toString()};
+  }
+}
+
+function updateRecord(params) {
+  try {
+    const sheet = getOrCreateSheet('Data');
+    const rowIndex = parseInt(params.rowIndex);
+    
+    // Get current row data
+    const currentRow = sheet.getRange(rowIndex, 1, 1, 15).getValues()[0];
+    
+    // Update only status and file (if provided)
+    let fileUrl = currentRow[11]; // Keep existing file URL
+    
+    // Handle new file upload if provided
+    if (params.fileData && params.fileName) {
+      fileUrl = uploadFile(params.fileData, params.fileName, params.fileType, params.responsible);
+    }
+    
+    // Update only status (column K) and file URL (column L)
+    sheet.getRange(rowIndex, 11).setValue(params.status); // Status column
+    if (params.fileData && params.fileName) {
+      sheet.getRange(rowIndex, 12).setValue(fileUrl); // File URL column
+    }
+    
+    // Update last edit timestamp (column O)
+    sheet.getRange(rowIndex, 15).setValue(new Date().toLocaleString('th-TH', {timeZone: 'Asia/Bangkok'}));
+    
+    return {success: true};
+  } catch (error) {
+    return {success: false, error: error.toString()};
+  }
+}
+
+function readData() {
+  try {
+    const sheet = getOrCreateSheet('Data');
+    const data = sheet.getDataRange().getValues();
+    
+    // Remove header row
+    data.shift();
+    
+    return {success: true, data: data};
+  } catch (error) {
+    return {success: false, error: error.toString()};
+  }
+}
+
+function uploadFile(base64Data, fileName, fileType, responsible) {
+  try {
+    const parentFolder = DriveApp.getFolderById(FOLDER_ID);
+    
+    // Create or get responsible person folder
+    let responsibleFolder;
+    const folders = parentFolder.getFoldersByName(responsible);
+    
+    if (folders.hasNext()) {
+      responsibleFolder = folders.next();
+    } else {
+      responsibleFolder = parentFolder.createFolder(responsible);
+    }
+    
+    // Decode base64 and create file
+    const blob = Utilities.newBlob(Utilities.base64Decode(base64Data), fileType, fileName);
+    const file = responsibleFolder.createFile(blob);
+    
+    // Make file publicly viewable
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    // Return Google Drive direct link
+    return `https://lh3.googleusercontent.com/d/${file.getId()}`;
+  } catch (error) {
+    console.error('File upload error:', error);
+    return '';
+  }
+}
+
+function getOrCreateSheet(sheetName) {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(sheetName);
+  
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(sheetName);
+    
+    if (sheetName === 'Data') {
+      // Create headers for data sheet
+      const headers = [
+        'วันที่', 'รายละเอียด', 'ชื่อผู้ขอขยายเขต', 'อำเภอ', 'ตำบล', 'หมู่บ้าน', 
+        'เบอร์โทรศัพท์', 'ผู้รับผิดชอบ', 'งบ', 'งบประมาณ', 'สถานะ', 'ไฟล์', 
+        'หมายเลข WBS', 'Update', 'Last Edit'
+      ];
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    } else if (sheetName === 'Config') {
+      // Create config sheet with default values
+      const configData = [
+        ['Key', 'Value'],
+        ['appTitle', 'Work Book แผนกบริการและลูกค้าสัมพันธ์ กฟส.เมืองนครพนม'],
+        ['bannerImage', ''],
+        ['developerInfo', 'พัฒนาโดย นายศุภกฤษ ทะวัง ชผ.บส.กฟส.เมืองนครพนม'],
+        ['username', 'admin'],
+        ['password', 'password123'],
+        ['districts_1', 'เมืองนครพนม'],
+        ['districts_2', 'โพนสวรรค์'],
+        ['districts_3', 'ธาตุพนม'],
+        ['districts_4', 'ท่าอุเทน'],
+        ['districts_5', 'นาแก'],
+        ['districts_6', 'ศรีสงคราม'],
+        ['districts_7', 'นาหว้า'],
+        ['districts_8', 'บ้านแพง'],
+        ['districts_9', 'ปลาปาก'],
+        ['districts_10', 'วังยาง'],
+        ['districts_11', 'นาทม']
+      ];
+      sheet.getRange(1, 1, configData.length, 2).setValues(configData);
+    }
+  }
+  
+  return sheet;
+}
+
+//.................
+function recordLogin(data) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('UserStats') || 
+                  SpreadsheetApp.getActiveSpreadsheet().insertSheet('UserStats');
+    
+    // Add headers if sheet is empty
+    if (sheet.getLastRow() === 0) {
+      sheet.getRange(1, 1, 1, 4).setValues([['Timestamp', 'Username', 'Date', 'UserAgent']]);
+    }
+    
+    const now = new Date();
+    const thaiDate = now.toLocaleDateString('th-TH');
+    
+    sheet.appendRow([
+      now.toISOString(),
+      data.username,
+      thaiDate,
+      data.userAgent
+    ]);
+    
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
+function getUserStats() {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('UserStats');
+    if (!sheet) {
+      return { success: true, data: { onlineUsers: 1, todayUsers: 1, totalUsers: 1 } };
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return { success: true, data: { onlineUsers: 1, todayUsers: 1, totalUsers: 1 } };
+    }
+    
+    const today = new Date().toLocaleDateString('th-TH');
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    
+    let todayUsers = new Set();
+    let onlineUsers = new Set();
+    let totalUsers = new Set();
+    
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const timestamp = new Date(row[0]);
+      const username = row[1];
+      const date = row[2];
+      
+      totalUsers.add(username);
+      
+      if (date === today) {
+        todayUsers.add(username);
+      }
+      
+      if (timestamp >= fiveMinutesAgo) {
+        onlineUsers.add(username);
+      }
+    }
+    
+    return {
+      success: true,
+      data: {
+        onlineUsers: onlineUsers.size,
+        todayUsers: todayUsers.size,
+        totalUsers: totalUsers.size
+      }
+    };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}

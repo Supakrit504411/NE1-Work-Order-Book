@@ -1,0 +1,449 @@
+<style>
+/* ============================================================
+ * stylesheet.html — CSS ทั้งหมดของ Work Book
+ * (Mobile-First Responsive Design บน Bootstrap 5)
+ * ------------------------------------------------------------
+ * โครงสร้าง:
+ *   1. Design Tokens (CSS Variables)
+ *   2. Base & Layout
+ *   3. Animations
+ *   4. Components (buttons, cards, modals, tables, etc.)
+ *   5. Responsive (Mobile / Tablet breakpoints)
+ * ============================================================ */
+
+/* Font import — ต้องอยู่บนสุดใน <style> */
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+
+/* ============ 1. Design Tokens ============ */
+:root {
+    --wb-primary: #2A505A;
+    --wb-primary-dark: #1e3a42;
+    --wb-primary-light: #3a6a75;
+    --wb-accent: #0d6efd;
+    --wb-bg: #f5f7fa;
+    --wb-text: #1f2937;
+    --wb-text-muted: #6b7280;
+    --wb-border: #e5e7eb;
+    --wb-success: #22c55e;
+    --wb-warning: #f59e0b;
+    --wb-danger: #ef4444;
+    --wb-info: #3b82f6;
+    --wb-radius: 0.625rem;
+    --wb-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --wb-shadow-hover: 0 10px 25px rgba(42, 80, 90, 0.18);
+    --wb-header-h: 200px;
+    --wb-transition: all 0.3s ease;
+}
+
+/* ============ 2. Base & Layout ============ */
+* { box-sizing: border-box; }
+
+.wb-body {
+    font-family: 'Sarabun', 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+    color: var(--wb-text);
+    margin: 0;
+    padding-bottom: 60px;
+    min-height: 100vh;
+}
+
+/* --- blur-sm: ใช้เบลอพื้นหลังหลัง login modal (สำคัญ!) --- */
+.blur-sm {
+    filter: blur(6px);
+    pointer-events: none;
+    user-select: none;
+}
+
+.wb-main {
+    min-height: 60vh;
+    background: var(--wb-bg);
+    border-radius: 1rem 1rem 0 0;
+    margin-top: -1rem;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.wb-section { animation: fadeIn 0.4s ease; }
+
+/* Header Banner — มี gradient fallback ถ้าไม่มีรูป */
+.wb-banner {
+    width: 100%;
+    height: var(--wb-header-h);
+    background: linear-gradient(135deg, var(--wb-primary), var(--wb-primary-dark), #1a3a4a, #2A505A);
+    background-size: cover, cover;
+    background-position: center;
+    position: relative;
+}
+.wb-banner::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+/* Title Bar */
+.wb-titlebar {
+    position: relative;
+    overflow: hidden;
+    padding: 0.75rem 0;
+}
+.wb-app-title {
+    font-size: clamp(0.95rem, 2.5vw, 1.5rem);
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    text-align: center;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Navbar */
+.wb-navbar { z-index: 1020; }
+.gradient-bg {
+    background: linear-gradient(135deg, var(--wb-primary) 0%, var(--wb-primary-dark) 100%);
+}
+.wb-nav-btn {
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid transparent;
+    transition: var(--wb-transition);
+    white-space: nowrap;
+}
+.wb-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+}
+.wb-nav-btn.active {
+    background: rgba(255, 255, 255, 0.28);
+    color: #fff;
+    font-weight: 600;
+}
+
+/* User stats */
+.wb-user-stats {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--wb-radius);
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+    color: #fff;
+    gap: 0.75rem;
+    display: flex;
+    align-items: center;
+}
+
+/* Footer */
+.wb-footer {
+    background: #1f2937;
+    padding: 0.85rem 1rem;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 1020;
+    font-size: 0.85rem;
+}
+
+/* ============ 3. Animations ============ */
+.animated-bg {
+    background: linear-gradient(-45deg, #FFB6C1, #E6E6FA, #F0E68C, #98FB98, #87CEEB, #DDA0DD);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+}
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.04); }
+    70% { transform: scale(0.96); }
+    100% { transform: scale(1); opacity: 1; }
+}
+.animate-fade-in { animation: fadeIn 0.5s ease; }
+.animate-slide-up { animation: slideUp 0.3s ease; }
+.animate-bounce-in { animation: bounceIn 0.6s ease; }
+
+/* Spinner */
+.wb-spinner {
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    width: 20px; height: 20px;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============ 4. Components ============ */
+
+/* Cards */
+.wb-card {
+    border: none;
+    border-radius: var(--wb-radius);
+    border-left: 4px solid var(--wb-primary);
+    transition: var(--wb-transition);
+}
+.wb-card:hover {
+    box-shadow: var(--wb-shadow-hover);
+    transform: translateY(-2px);
+}
+.wb-section-title {
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    font-weight: 700;
+    color: var(--wb-text);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+}
+.wb-sub-title { font-size: 1.05rem; font-weight: 700; }
+
+/* Buttons */
+.wb-btn-primary {
+    background: linear-gradient(135deg, var(--wb-primary) 0%, var(--wb-primary-dark) 100%);
+    color: #fff;
+    border: none;
+    font-weight: 500;
+    transition: var(--wb-transition);
+}
+.wb-btn-primary:hover {
+    background: linear-gradient(135deg, var(--wb-primary-light) 0%, var(--wb-primary) 100%);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(42, 80, 90, 0.3);
+}
+.wb-btn-primary:disabled { opacity: 0.6; }
+
+/* Field groups */
+.wb-field-group { background: #fff; }
+.wb-required { border-left: 4px solid var(--wb-primary); background: rgba(42, 80, 90, 0.02); }
+.wb-optional { border-left: 4px solid var(--wb-text-muted); background: rgba(148, 163, 184, 0.04); }
+.wb-group-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; }
+
+/* Forms */
+.form-control, .form-select {
+    border-radius: 0.5rem;
+    border-color: var(--wb-border);
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--wb-primary-light);
+    box-shadow: 0 0 0 0.2rem rgba(42, 80, 90, 0.15);
+}
+
+/* Modals (overlay style) */
+.wb-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 20, 60, 0.65);
+    backdrop-filter: blur(8px);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.wb-modal-overlay.d-none { display: none !important; }
+.wb-modal-dark { background: rgba(0, 0, 0, 0.85); }
+.wb-modal-dialog {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 2rem;
+    width: 100%;
+    max-width: 480px;
+    max-height: 92vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+}
+.wb-modal-lg { max-width: 720px; }
+.wb-modal-xl { max-width: 1100px; height: 88vh; }
+.wb-modal-title { font-size: 1.35rem; font-weight: 700; color: var(--wb-text); }
+.wb-login-icon {
+    width: 80px; height: 80px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+.wb-modal-img-wrap { position: relative; max-width: 92vw; max-height: 92vh; }
+.wb-modal-img { max-width: 92vw; max-height: 90vh; object-fit: contain; border-radius: var(--wb-radius); }
+.wb-close-btn { position: absolute; top: -12px; right: -12px; border-radius: 50%; width: 36px; height: 36px; padding: 0; }
+.wb-frame-wrap { flex: 1; height: calc(88vh - 70px); }
+.wb-iframe { width: 100%; height: 100%; border: 0; border-radius: var(--wb-radius); }
+
+/* Status badges */
+.wb-badge {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.wb-badge-pending  { background: #fef3c7; color: #92400e; }
+.wb-badge-progress { background: #dbeafe; color: #1e40af; }
+.wb-badge-done     { background: #dcfce7; color: #166534; }
+.wb-badge-cancel   { background: #fee2e2; color: #991b1b; }
+.wb-badge-default  { background: #f3f4f6; color: #374151; }
+
+/* Tables */
+.wb-data-table { font-size: 0.9rem; }
+.wb-data-table thead th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--wb-text-muted);
+    border-bottom: 2px solid var(--wb-border);
+    white-space: nowrap;
+    padding: 0.75rem;
+}
+.wb-data-table tbody td { padding: 0.65rem 0.75rem; vertical-align: middle; }
+.wb-sortable { cursor: pointer; }
+.wb-sortable:hover { background: #f9fafb; }
+.wb-table-wrap { border: 1px solid var(--wb-border); border-radius: var(--wb-radius); }
+
+/* Status summary cards */
+.wb-stat-card {
+    border-radius: var(--wb-radius);
+    padding: 1rem;
+    color: #fff;
+    text-align: center;
+    transition: var(--wb-transition);
+}
+.wb-stat-card:hover { transform: translateY(-2px); box-shadow: var(--wb-shadow-hover); }
+.wb-stat-card .wb-stat-num { font-size: 1.75rem; font-weight: 700; line-height: 1.1; }
+.wb-stat-card .wb-stat-label { font-size: 0.9rem; opacity: 0.95; }
+.wb-stat-card .wb-stat-sub { font-size: 0.78rem; opacity: 0.8; }
+.wb-stat-total { background: linear-gradient(135deg, #4b5563, #374151); }
+.wb-stat-pending  { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.wb-stat-progress { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.wb-stat-done     { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.wb-stat-cancel   { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+/* Mobile data cards (replacement for tables on small screens) */
+.wb-mobile-card {
+    background: #fff;
+    border: 1px solid var(--wb-border);
+    border-radius: var(--wb-radius);
+    padding: 0.85rem;
+    margin-bottom: 0.6rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.wb-mobile-card-row { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.88rem; margin-bottom: 0.3rem; }
+.wb-mobile-card-row:last-child { margin-bottom: 0; }
+.wb-mobile-card-label { color: var(--wb-text-muted); flex-shrink: 0; min-width: 70px; }
+.wb-mobile-card-value { text-align: right; word-break: break-word; }
+
+/* Pagination */
+.wb-pagination { display: flex; justify-content: center; align-items: center; gap: 0.35rem; flex-wrap: wrap; margin-top: 1rem; }
+.wb-pagination button {
+    min-width: 2.4rem;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--wb-border);
+    background: #fff;
+    color: var(--wb-text);
+    border-radius: 0.4rem;
+    cursor: pointer;
+    transition: var(--wb-transition);
+}
+.wb-pagination button:hover:not(:disabled) { background: #f3f4f6; }
+.wb-pagination button.active { background: var(--wb-primary); color: #fff; border-color: var(--wb-primary); }
+.wb-pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+.wb-pagination-info { margin-left: 0.5rem; font-size: 0.82rem; color: var(--wb-text-muted); }
+
+/* Chart */
+.wb-chart-wrap { background: #f9fafb; }
+.wb-canvas-wrap { position: relative; height: 300px; }
+
+/* External link cards */
+.wb-link-card {
+    border-radius: var(--wb-radius);
+    color: #fff;
+    padding: 1.25rem;
+    transition: var(--wb-transition);
+    height: 100%;
+}
+.wb-link-card:hover { transform: translateY(-3px); box-shadow: var(--wb-shadow-hover); }
+.wb-link-icon { font-size: 2.25rem; margin-bottom: 0.75rem; }
+.wb-link-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.35rem; }
+.wb-link-desc { font-size: 0.85rem; opacity: 0.9; }
+.wb-youtube-frame { aspect-ratio: 16/9; width: 100%; border-radius: var(--wb-radius); }
+
+/* Search results summary */
+.wb-search-summary {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: var(--wb-radius);
+    margin-bottom: 1rem;
+}
+
+/* Cell ellipsis — ตัดข้อความยาวในตาราง */
+.wb-cell-ellipsis {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Loading spinner — สำหรับปุ่มบันทึก */
+.loading-spinner {
+    border: 3px solid rgba(42, 80, 90, 0.3);
+    border-top-color: var(--wb-primary);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+/* ============ 5. Responsive ============ */
+
+/* Tablet (≤ 992px) */
+@media (max-width: 992px) {
+    :root { --wb-header-h: 160px; }
+    .wb-modal-dialog { padding: 1.25rem; }
+}
+
+/* Mobile (≤ 768px) */
+@media (max-width: 768px) {
+    :root { --wb-header-h: 130px; }
+    .wb-app-title { font-size: 0.95rem; }
+    .wb-section-title { font-size: 1.15rem; }
+    .wb-data-table { font-size: 0.82rem; }
+    .wb-data-table thead th { padding: 0.5rem; font-size: 0.72rem; }
+    .wb-data-table tbody td { padding: 0.5rem; }
+    .wb-modal-dialog { padding: 1rem; max-height: 95vh; }
+    .wb-modal-title { font-size: 1.15rem; }
+    .wb-canvas-wrap { height: 260px; }
+    .wb-stat-card .wb-stat-num { font-size: 1.4rem; }
+    .wb-user-stats { font-size: 0.72rem; }
+}
+
+/* Small phones (≤ 480px) */
+@media (max-width: 480px) {
+    :root { --wb-header-h: 100px; }
+    .wb-nav-btn { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+    .wb-app-title { font-size: 0.85rem; }
+    .wb-modal-dialog { padding: 0.85rem; }
+    .wb-pagination button { min-width: 2rem; padding: 0.3rem 0.45rem; font-size: 0.85rem; }
+    .wb-canvas-wrap { height: 220px; }
+    body { padding-bottom: 50px; }
+}
+
+/* Reduce motion (accessibility) */
+@media (prefers-reduced-motion: reduce) {
+    .animated-bg { animation: none; }
+    .animate-fade-in, .animate-slide-up, .animate-bounce-in { animation: none; }
+}
+
+/* SweetAlert RTL/Font fix */
+.swal2-popup { font-family: 'Sarabun', sans-serif !important; }
+
+/* Font Awesome 6 brands fallback (สำหรับ fab-* class) */
+.fab {
+    font-family: "Font Awesome 6 Brands", "Font Awesome 6 Free";
+    font-weight: 900;
+}
+</style>
