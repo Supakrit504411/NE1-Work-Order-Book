@@ -315,7 +315,7 @@
     <div class="w-full h-16 animated-bg relative overflow-hidden blur-sm mt-4">
         <div class="absolute inset-0 flex items-center justify-center">
             <div class="text-center text-white px-4">
-                <h1 id="appTitle" class="text-lg md:text-xl lg:text-2xl font-bold animate-fade-in drop-shadow-lg">Work Book แผนกบริการและลูกค้าสัมพันธ์ กฟส.เมืองนครพนม</h1>
+                <h1 id="appTitle" class="text-lg md:text-xl lg:text-2xl font-bold animate-fade-in drop-shadow-lg">Work Book แผนกบริการและลูกค้าสัมพันธ์</h1>
             </div>
         </div>
     </div>
@@ -564,10 +564,10 @@
                                 <th class="px-4 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100 h-12" onclick="sortTable(10)">
                                     สถานะ <i class="fas fa-sort ml-1"></i>
                                 </th>
-                                <th class="px-4 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider h-12">
+                                <th class="px-4 py-4 text-left text-sm font-bold text-gray-700 uppercase h-12">
                                     ไฟล์
                                 </th>
-                                <th class="px-4 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider h-12">
+                                <th class="px-4 py-4 text-left text-sm font-bold text-gray-700 uppercase h-12">
                                     จัดการ
                                 </th>
                             </tr>
@@ -657,7 +657,7 @@
     <!-- Footer -->
     <footer class="bg-gray-800 text-white py-4 mt-12 fixed bottom-0 left-0 right-0 z-30 blur-sm">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p id="developerInfo" class="text-sm mobile-text-sm">พัฒนาโดย นายศุภกฤษ ทะวัง ชผ.บส.กฟส.เมืองนครพนม</p>
+            <p id="developerInfo" class="text-sm mobile-text-sm">กำลังโหลดผู้พัฒนา...</p>
         </div>
     </footer>
 
@@ -744,9 +744,28 @@
 
     <script>
         // Global variables
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvOkZrjFi029dfLgU8Zfz-V0nRbjG0WOirYzYBtiUi2G81mdi82m03G_efQwdDx7hc/exec';
-        // หน่วยงานอ่านจาก URL เช่น ?dept=dept01 (ตั้งค่า default ไว้กันพลาดตอนทดสอบ)
-        const DEPT = new URLSearchParams(window.location.search).get('dept') || 'dept01';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_E7y2A1RzL6eYm4_S5pM5y7h-9u8x9y7w5-9O8p/exec';
+        
+        // ============================================================
+        // ★ แก้ไขการดึงรหัสหน่วยงาน (DEPT) ให้เสถียรที่สุดบน Vercel
+        // ดึงจาก Parameter ?dept=... หรือดึงจาก URL Path (เช่น /dept01) ได้อัตโนมัติ
+        // ============================================================
+        const getDeptFromURL = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            let dept = urlParams.get('dept');
+            
+            // ถ้าไม่มี ?dept= ใน URL ให้ดึงจาก Path หลังเครื่องหมาย / แทน (เช่น /dept01)
+            if (!dept) {
+                const pathParts = window.location.pathname.split('/').filter(Boolean);
+                if (pathParts.length > 0 && pathParts[0] !== 'index.html') {
+                    dept = pathParts[0];
+                }
+            }
+            return dept || 'dept01'; // ป้องกันการส่งค่าว่างไปหลังบ้าน
+        };
+
+        const DEPT = getDeptFromURL();
+        
         let allData = [];
         let configData = {};
         let isLoggedIn = false;
@@ -821,10 +840,11 @@
                         showConfirmButton: false
                     });
                 } else {
+                    // ★ แก้ไขให้ดึงข้อความแจ้งเตือน Error จริงจากระบบหลังบ้านมาแสดง
                     Swal.fire({
                         icon: 'error',
                         title: 'เข้าสู่ระบบไม่สำเร็จ',
-                        text: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'
+                        text: result.error || 'ชื่อผู้ใช้หรือรหัสผ่านสำหรับหน่วยงานนี้ไม่ถูกต้อง'
                     });
                 }
             } catch (error) {
@@ -832,7 +852,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
-                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
+                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์หลังบ้านได้'
                 });
             }
             
@@ -964,7 +984,6 @@
         function populateDropdowns() {
             // Districts
             const districtSelect = document.getElementById('district');
-            const searchDistrictSelect = document.getElementById('searchDistrict');
             
             // Clear existing options first (except the first default option)
             while (districtSelect.options.length > 1) {
@@ -1521,7 +1540,6 @@
             
             const statusColor = getStatusColor(row[10]);
             const status = row[10] || 'ไม่ระบุสถานะ';
-            const canEdit = status !== 'ยกเลิก' && status !== 'เสร็จสิ้น';
             
             // Find the actual index in allData array using multiple fields for unique identification
             const originalIndex = allData.findIndex(dataRow => 
@@ -2618,5 +2636,5 @@
         // Initialize with record section
         showSection('record');
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f74e8bf1127331',t:'MTc1NTI0NjM4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
